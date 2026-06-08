@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AES Document Plan Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--g1:#1a5c28;--g2:#2d8a3e;--g3:#4caf50;--gx:#e8f5e9;--orange:#ff7043;--orangex:#fff3e0;--yellow:#f9a825;--yellowx:#fff8e1;--blue:#1565c0;--red:#c62828;--gray:#f4f6f9;--border:#e0e6ed;--text:#1a2433;--muted:#8a9ab5;--sub:#4a5568;--shadow:0 2px 12px rgba(0,0,0,.07);--shadowL:0 8px 32px rgba(0,0,0,.14);--r:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Cairo',sans-serif;background:var(--gray);color:var(--text);direction:rtl}
+/* LOADING SCREEN */
+#loadingScreen{position:fixed;inset:0;background:linear-gradient(135deg,var(--g1),var(--g2));display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .4s}
+#loadingScreen.hide{opacity:0;pointer-events:none}
+.load-logo{background:#fff;border-radius:14px;padding:10px 24px;font-weight:900;font-size:28px;color:var(--g1);letter-spacing:2px;margin-bottom:24px}
+.load-txt{color:rgba(255,255,255,.85);font-size:14px;margin-bottom:20px}
+.load-bar-bg{width:220px;height:4px;background:rgba(255,255,255,.2);border-radius:99px;overflow:hidden}
+.load-bar-fill{height:100%;background:#fff;border-radius:99px;animation:loadbar 1.4s ease-in-out infinite}
+@keyframes loadbar{0%{width:0%;margin-right:100%}50%{width:60%}100%{width:0%;margin-left:100%}}
+/* HEADER */
+.hdr{background:linear-gradient(135deg,var(--g1),var(--g2) 60%,var(--g3));position:sticky;top:0;z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.hdr-in{display:flex;align-items:center;justify-content:space-between;padding:13px 28px;max-width:1700px;margin:0 auto;gap:12px;flex-wrap:wrap}
+.logo{background:#fff;border-radius:9px;padding:5px 13px;font-weight:900;font-size:17px;color:var(--g1);letter-spacing:1px}
+.hdr-title{color:#fff;font-size:18px;font-weight:700}
+.hdr-sub{color:rgba(255,255,255,.7);font-size:11px}
+.hdr-btns{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hbtn{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:7px;padding:7px 14px;font:600 12px 'Cairo',sans-serif;cursor:pointer;transition:.2s}
+.hbtn:hover{background:rgba(255,255,255,.28)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#4caf50;display:inline-block;margin-left:5px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.sync-dot.syncing{background:#ff7043;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.last-upd{color:rgba(255,255,255,.75);font-size:11px;font-family:'IBM Plex Mono',monospace;display:flex;align-items:center;gap:5px}
+/* NAV */
+.nav-bar{background:#fff;border-bottom:2px solid var(--border);position:sticky;top:62px;z-index:150;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.nav-inner{max-width:1700px;margin:0 auto;padding:0 28px;display:flex;overflow-x:auto}
+.nav-tab{padding:12px 22px;font:600 13px 'Cairo',sans-serif;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:.2s;white-space:nowrap}
+.nav-tab:hover{color:var(--g2)}.nav-tab.active{color:var(--g1);border-bottom-color:var(--g2)}
+.main{max-width:1700px;margin:0 auto;padding:22px 28px 48px}
+.tab-view{display:none}.tab-view.active{display:block}
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+.kpi{background:#fff;border-radius:var(--r);padding:18px 20px;box-shadow:var(--shadow);border-top:4px solid transparent;transition:.2s;position:relative;overflow:hidden}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--shadowL)}
+.kpi.g{border-top-color:var(--g2)}.kpi.o{border-top-color:var(--orange)}.kpi.y{border-top-color:var(--yellow)}.kpi.b{border-top-color:var(--blue)}.kpi.r{border-top-color:var(--red)}
+.kpi-lbl{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
+.kpi-val{font-size:32px;font-weight:900;line-height:1;margin-bottom:4px}
+.kpi.g .kpi-val{color:var(--g2)}.kpi.o .kpi-val{color:var(--orange)}.kpi.y .kpi-val{color:#b7791f}.kpi.b .kpi-val{color:var(--blue)}.kpi.r .kpi-val{color:var(--red)}
+.kpi-sub{font-size:11px;color:var(--muted)}.kpi-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:34px;opacity:.08}
+/* PROGRESS BAR */
+.ov-bar{background:#fff;border-radius:var(--r);padding:18px 22px;box-shadow:var(--shadow);margin-bottom:20px;display:flex;align-items:center;gap:20px}
+.ov-lbl{font-size:13px;font-weight:700;white-space:nowrap}
+.ov-bg{flex:1;height:14px;background:var(--border);border-radius:99px;overflow:hidden}
+.ov-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--g1),var(--g3),#00c853);transition:width 1.2s cubic-bezier(.4,0,.2,1);position:relative}
+.ov-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);animation:shim 2s infinite}
+@keyframes shim{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+.ov-pct{font-size:22px;font-weight:900;color:var(--g2);font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+/* CARD */
+.card{background:#fff;border-radius:var(--r);padding:20px 22px;box-shadow:var(--shadow)}
+.card-title{font-size:13px;font-weight:700;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.two-col{display:grid;grid-template-columns:300px 1fr;gap:16px;margin-bottom:20px}
+/* DONUT */
+.donut-wrap{display:flex;flex-direction:column;align-items:center;gap:14px}
+.leg-item{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.leg-item:last-child{border-bottom:none}
+.leg-dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-left:7px;flex-shrink:0}
+.leg-lbl{display:flex;align-items:center;color:var(--sub);font-weight:500}.leg-cnt{font-weight:700;color:var(--text)}
+/* WS BARS */
+.ws-item{margin-bottom:11px;cursor:pointer;padding:8px;border-radius:8px;transition:background .15s}
+.ws-item:hover{background:var(--gx)}
+.ws-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.ws-name{font-size:11.5px;font-weight:700;color:var(--text)}
+.ws-pct{font-size:12px;font-weight:700;color:var(--g2);font-family:'IBM Plex Mono',monospace}
+.ws-bg{height:7px;background:var(--border);border-radius:99px;overflow:hidden}
+.ws-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--g1),var(--g3));transition:width 1s}
+.ws-fill.warn{background:linear-gradient(90deg,#e65100,var(--orange))}.ws-fill.hold{background:linear-gradient(90deg,#b71c1c,var(--red))}
+.ws-counts{font-size:10px;color:var(--muted);margin-top:3px}
+/* WS CARDS */
+.ws-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.ws-card{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;transition:.2s}
+.ws-card:hover{box-shadow:var(--shadowL)}
+.wsc-hdr{padding:14px 16px 10px;display:flex;align-items:flex-start;justify-content:space-between;border-bottom:3px solid}
+.wsc-hdr.done{background:var(--gx);border-color:var(--g3)}.wsc-hdr.prog{background:var(--orangex);border-color:var(--orange)}.wsc-hdr.hold{background:var(--yellowx);border-color:var(--yellow)}
+.wsc-name{font-size:13px;font-weight:800;color:var(--text);flex:1;margin-left:10px}
+.wsc-pct{font-size:20px;font-weight:900;font-family:'IBM Plex Mono',monospace;white-space:nowrap}
+.wsc-hdr.done .wsc-pct{color:var(--g2)}.wsc-hdr.prog .wsc-pct{color:var(--orange)}.wsc-hdr.hold .wsc-pct{color:#b7791f}
+.wsc-bar-bg{height:5px}
+.wsc-bar-fill{height:100%;transition:width .8s}
+.wsc-hdr.done+.wsc-bar-bg .wsc-bar-fill{background:var(--g3)}.wsc-hdr.prog+.wsc-bar-bg .wsc-bar-fill{background:var(--orange)}.wsc-hdr.hold+.wsc-bar-bg .wsc-bar-fill{background:var(--yellow)}
+.wsc-tasks{padding:4px 0}
+.wsc-task{display:flex;align-items:flex-start;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer}
+.wsc-task:last-child{border-bottom:none}.wsc-task:hover{background:var(--gray)}
+.wsc-task-icon{font-size:13px;flex-shrink:0;margin-top:2px}
+.wsc-task-body{flex:1;min-width:0}
+.wsc-task-action{font-size:11.5px;color:var(--text);font-weight:500;line-height:1.4;margin-bottom:2px}
+.wsc-task-meta{font-size:10px;color:var(--muted)}
+.wsc-footer{padding:8px 14px;background:var(--gray);display:flex;gap:10px;font-size:11px;color:var(--sub)}
+/* ACCOUNTABILITY */
+.acc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.acc-card{background:#fff;border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.acc-hdr{padding:13px 15px;display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--g1),var(--g2))}
+.acc-avatar{width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0;border:2px solid rgba(255,255,255,.4)}
+.acc-name{font-size:12.5px;font-weight:700;color:#fff}.acc-func{font-size:10.5px;color:rgba(255,255,255,.7)}
+.acc-badge{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:3px 9px;color:#fff;font-size:11px;font-weight:700;white-space:nowrap}
+.acc-badge.pend{background:rgba(255,87,34,.35);border-color:rgba(255,120,60,.5)}
+.acc-tasks{padding:4px 0;max-height:260px;overflow-y:auto}
+.acc-task{display:flex;align-items:flex-start;gap:8px;padding:7px 13px;border-bottom:1px solid var(--border);transition:background .15s;cursor:pointer}
+.acc-task:last-child{border-bottom:none}.acc-task:hover{background:var(--gray)}
+.acc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.acc-dot.C{background:var(--g3)}.acc-dot.I{background:var(--orange)}.acc-dot.H{background:var(--yellow)}.acc-dot.N{background:var(--muted)}
+.acc-txt{font-size:11px;color:var(--sub);line-height:1.4}.acc-ws{font-size:10px;color:var(--muted);margin-top:1px}
+.acc-footer{padding:7px 13px;background:var(--gray);font-size:11px;font-weight:700}
+.acc-footer.pend{color:var(--orange)}.acc-footer.clear{color:var(--g2)}
+.func-filter{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.func-btn{padding:6px 13px;border:1.5px solid var(--border);border-radius:99px;background:#fff;font:600 11.5px 'Cairo',sans-serif;cursor:pointer;transition:.15s;color:var(--sub)}
+.func-btn:hover,.func-btn.active{background:var(--g2);color:#fff;border-color:var(--g2)}
+/* PENDING TABLE */
+.pend-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.pend-tbl th{background:var(--g1);color:#fff;padding:9px 11px;text-align:right;font-weight:600;white-space:nowrap}
+.pend-tbl td{padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:top}
+.pend-tbl tr:hover td{background:var(--orangex)}.pend-tbl tr:last-child td{border-bottom:none}
+/* MAIN TABLE */
+.tbl-controls{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.srch{flex:1;min-width:180px;padding:8px 12px;border:1.5px solid var(--border);border-radius:7px;font:13px 'Cairo',sans-serif;outline:none;direction:rtl;transition:border-color .2s}
+.srch:focus{border-color:var(--g2)}
+.fbtn{padding:7px 13px;border:1.5px solid var(--border);border-radius:7px;background:#fff;font:600 12px 'Cairo',sans-serif;cursor:pointer;transition:.15s;color:var(--sub)}
+.fbtn:hover,.fbtn.active{background:var(--g2);color:#fff;border-color:var(--g2)}
+.fbtn.ao.active{background:var(--orange);border-color:var(--orange)}.fbtn.ay.active{background:var(--yellow);border-color:var(--yellow)}
+.tbl-wrap{max-height:520px;overflow-y:auto;border-radius:8px;border:1px solid var(--border)}
+.tbl-wrap::-webkit-scrollbar{width:5px}.tbl-wrap::-webkit-scrollbar-thumb{background:var(--g2);border-radius:3px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--g1);color:#fff;padding:10px 11px;text-align:right;font-weight:600;font-size:11.5px;white-space:nowrap;position:sticky;top:0;z-index:1}
+thead th:first-child{border-radius:0 7px 0 0}thead th:last-child{border-radius:7px 0 0 0}
+tbody td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--sub);line-height:1.5}
+tbody tr:hover td{background:var(--gx)}tbody tr:last-child td{border-bottom:none}
+.ws-cell{font-weight:700;color:var(--text);font-size:11.5px}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
+.badge:hover{opacity:.82;transform:scale(.97)}
+.badge.C{background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7}
+.badge.I{background:#fff3e0;color:#e65100;border:1px solid #ffcc80}
+.badge.H{background:#fce4ec;color:#c62828;border:1px solid #ef9a9a}
+.badge.N{background:#f5f5f5;color:#9e9e9e;border:1px solid #e0e0e0}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor}
+.btn-add-row{background:var(--gx);color:var(--g1);border:2px dashed var(--g2);border-radius:7px;padding:7px 16px;font:700 12px 'Cairo',sans-serif;cursor:pointer;transition:.2s}
+.btn-add-row:hover{background:var(--g2);color:#fff}
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;backdrop-filter:blur(3px);align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:24px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:slideUp .22s ease;direction:rtl}
+@keyframes slideUp{from{transform:translateY(18px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:11px;border-bottom:2px solid var(--border)}
+.modal-ttl{font-size:15px;font-weight:700}
+.mcls{width:30px;height:30px;border:none;background:var(--border);border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:.15s}
+.mcls:hover{background:#ff5252;color:#fff}
+.fg{margin-bottom:13px}.fl{font-size:11px;font-weight:700;color:var(--sub);margin-bottom:4px;display:block}
+.fi,.fs,.ft{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;font:13px 'Cairo',sans-serif;outline:none;direction:rtl;color:var(--text);transition:border-color .2s}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--g2)}.ft{resize:vertical;min-height:65px}
+.m-actions{display:flex;gap:8px;margin-top:16px}
+.btn-save{background:var(--g2);color:#fff;border:none;border-radius:7px;padding:9px 22px;font:700 13px 'Cairo',sans-serif;cursor:pointer;transition:.2s}
+.btn-save:hover{background:var(--g1)}.btn-save:disabled{background:var(--muted);cursor:not-allowed}
+.btn-cancel{background:var(--border);color:var(--sub);border:none;border-radius:7px;padding:9px 18px;font:600 13px 'Cairo',sans-serif;cursor:pointer;transition:.2s}
+.btn-cancel:hover{background:#cfd8dc}
+/* TOAST */
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--g1);color:#fff;padding:11px 26px;border-radius:99px;font:600 13px 'Cairo',sans-serif;box-shadow:var(--shadowL);transition:transform .3s;z-index:9999;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--red)}
+@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.two-col{grid-template-columns:1fr}}
+@media(max-width:650px){.kpi-grid{grid-template-columns:1fr 1fr}.main{padding:14px}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loadingScreen">
+  <div class="load-logo">AES</div>
+  <div class="load-txt">جاري تحميل البيانات من قاعدة البيانات...</div>
+  <div class="load-bar-bg"><div class="load-bar-fill"></div></div>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-in">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="logo">AES</div>
+      <div><div class="hdr-title">لوحة تتبع خطة التوثيق</div><div class="hdr-sub">AES Document Plan — Live Dashboard</div></div>
+    </div>
+    <div class="hdr-btns">
+      <div class="last-upd"><div class="sync-dot" id="syncDot"></div><span id="lastUpd">متصل بقاعدة البيانات</span></div>
+      <button class="hbtn" onclick="loadData()">🔄 تحديث</button>
+      <button class="hbtn" onclick="exportCSV()">📤 تصدير CSV</button>
+      <button class="hbtn" onclick="window.print()">🖨️ طباعة</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-bar">
+  <div class="nav-inner">
+    <div class="nav-tab active" onclick="showTab('overview',this)">📊 نظرة عامة</div>
+    <div class="nav-tab" onclick="showTab('workstreams',this)">📦 تفصيل Workstreams</div>
+    <div class="nav-tab" onclick="showTab('accountability',this)">👤 المتابعة بالأسماء</div>
+    <div class="nav-tab" onclick="showTab('table',this)">📋 جدول المهام الكامل</div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- OVERVIEW -->
+<div class="tab-view active" id="tab-overview">
+  <div class="ov-bar">
+    <div class="ov-lbl">📊 التقدم الإجمالي للمشروع</div>
+    <div class="ov-bg"><div class="ov-fill" id="ovFill" style="width:0%"></div></div>
+    <div class="ov-pct" id="ovPct">0%</div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi g"><div class="kpi-lbl">مكتملة ✅</div><div class="kpi-val" id="kC">0</div><div class="kpi-sub" id="kCs">—</div><div class="kpi-icon">✅</div></div>
+    <div class="kpi o"><div class="kpi-lbl">جارية 🔄</div><div class="kpi-val" id="kI">0</div><div class="kpi-sub">قيد التنفيذ</div><div class="kpi-icon">🔄</div></div>
+    <div class="kpi y"><div class="kpi-lbl">معلّقة ⏸</div><div class="kpi-val" id="kH">0</div><div class="kpi-sub">تنتظر إجراء</div><div class="kpi-icon">⏸</div></div>
+    <div class="kpi b"><div class="kpi-lbl">إجمالي المهام</div><div class="kpi-val" id="kT">0</div><div class="kpi-sub" id="kWs">—</div><div class="kpi-icon">📋</div></div>
+    <div class="kpi r"><div class="kpi-lbl">لديهم مهام جارية</div><div class="kpi-val" id="kP">0</div><div class="kpi-sub">شخص / فريق</div><div class="kpi-icon">👤</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">توزيع حالات المهام</div>
+      <div class="donut-wrap">
+        <svg width="170" height="170" viewBox="0 0 170 170" style="filter:drop-shadow(0 4px 10px rgba(0,0,0,.1))">
+          <circle cx="85" cy="85" r="66" fill="none" stroke="var(--border)" stroke-width="26"/>
+          <circle id="dC" cx="85" cy="85" r="66" fill="none" stroke="#2d8a3e" stroke-width="26" stroke-dasharray="0 415" stroke-dashoffset="0" style="transition:stroke-dasharray 1.2s cubic-bezier(.4,0,.2,1);transform-origin:center;transform:rotate(-90deg)"/>
+          <circle id="dI" cx="85" cy="85" r="66" fill="none" stroke="#ff7043" stroke-width="26" stroke-dasharray="0 415" stroke-dashoffset="0" style="transition:stroke-dasharray 1.2s cubic-bezier(.4,0,.2,1) .08s;transform-origin:center;transform:rotate(-90deg)"/>
+          <circle id="dH" cx="85" cy="85" r="66" fill="none" stroke="#f9a825" stroke-width="26" stroke-dasharray="0 415" stroke-dashoffset="0" style="transition:stroke-dasharray 1.2s cubic-bezier(.4,0,.2,1) .16s;transform-origin:center;transform:rotate(-90deg)"/>
+          <text x="85" y="80" text-anchor="middle" font-family="Cairo" font-size="24" font-weight="900" fill="#2d8a3e" id="dPct">0%</text>
+          <text x="85" y="98" text-anchor="middle" font-family="Cairo" font-size="10" fill="#8a9ab5">مكتملة</text>
+        </svg>
+        <div style="width:100%">
+          <div class="leg-item"><div class="leg-lbl"><span class="leg-dot" style="background:#2d8a3e"></span>مكتملة</div><div class="leg-cnt" id="lgC">0</div></div>
+          <div class="leg-item"><div class="leg-lbl"><span class="leg-dot" style="background:#ff7043"></span>جارية</div><div class="leg-cnt" id="lgI">0</div></div>
+          <div class="leg-item"><div class="leg-lbl"><span class="leg-dot" style="background:#f9a825"></span>معلّقة</div><div class="leg-cnt" id="lgH">0</div></div>
+          <div class="leg-item"><div class="leg-lbl"><span class="leg-dot" style="background:var(--border)"></span>غير محدد</div><div class="leg-cnt" id="lgN">0</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">التقدم حسب كل Workstream <span style="font-size:11px;color:var(--muted);font-weight:400">(انقر للتفصيل)</span></div>
+      <div id="wsBars" style="overflow-y:auto;max-height:320px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- WORKSTREAMS -->
+<div class="tab-view" id="tab-workstreams">
+  <div style="font-size:15px;font-weight:800;margin-bottom:18px;color:var(--text)">📦 تفصيل المهام لكل Workstream — انقر على أي مهمة لتحديثها</div>
+  <div class="ws-cards-grid" id="wsCardsGrid"></div>
+</div>
+
+<!-- ACCOUNTABILITY -->
+<div class="tab-view" id="tab-accountability">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+    <div style="font-size:15px;font-weight:800;color:var(--text)">👤 المتابعة بالأسماء — من لديه مهام جارية أو معلّقة؟</div>
+    <div style="font-size:12px;color:var(--muted)">انقر على أي مهمة لتحديثها مباشرة</div>
+  </div>
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">🚨 جدول المتابعة — المهام غير المكتملة</div>
+    <div style="overflow-x:auto">
+      <table class="pend-tbl"><thead><tr>
+        <th>الاسم</th><th>الوظيفة / القسم</th><th>Workstream</th><th>المهمة</th><th>الحالة</th><th>Due Date</th>
+      </tr></thead><tbody id="pendBody"></tbody></table>
+    </div>
+  </div>
+  <div class="func-filter" id="funcFilter"></div>
+  <div class="acc-grid" id="accGrid"></div>
+</div>
+
+<!-- TABLE -->
+<div class="tab-view" id="tab-table">
+  <div class="card">
+    <div class="card-title">
+      <span>📋 جدول المهام الكامل</span>
+      <button class="btn-add-row" onclick="openAdd()">➕ إضافة مهمة</button>
+    </div>
+    <div class="tbl-controls">
+      <input class="srch" type="text" placeholder="🔍 بحث..." id="srch" oninput="renderTable()">
+      <button class="fbtn active" onclick="setF('all',this)">الكل</button>
+      <button class="fbtn" onclick="setF('Completed',this)">✅ مكتملة</button>
+      <button class="fbtn ao" onclick="setF('In Progress',this)">🔄 جارية</button>
+      <button class="fbtn ay" onclick="setF('On Hold',this)">⏸ معلّقة</button>
+    </div>
+    <div class="tbl-wrap">
+      <table><thead><tr>
+        <th style="width:130px">Workstream</th><th style="width:90px">Scope</th>
+        <th style="width:90px">Acc. Owner</th><th style="width:100px">Owner</th>
+        <th style="width:265px">Action Item</th><th style="width:108px">الحالة</th>
+        <th style="width:185px">التعليقات</th><th style="width:85px">Due Date</th>
+      </tr></thead><tbody id="tblBody"></tbody></table>
+    </div>
+    <div style="margin-top:9px;font-size:11px;color:var(--muted)" id="tblCount"></div>
+  </div>
+</div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="closeBg(event)">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-ttl" id="mTitle">✏️ تحديث المهمة</div>
+      <button class="mcls" onclick="closeModal()">✕</button>
+    </div>
+    <div class="fg"><label class="fl">Workstream</label><input class="fi" id="mWs"></div>
+    <div class="fg"><label class="fl">Scope</label><input class="fi" id="mScope"></div>
+    <div class="fg"><label class="fl">Accountable Owner</label><input class="fi" id="mAcc"></div>
+    <div class="fg"><label class="fl">Owner</label><input class="fi" id="mOwner"></div>
+    <div class="fg"><label class="fl">Action Item</label><textarea class="ft" id="mAction" rows="3"></textarea></div>
+    <div class="fg">
+      <label class="fl">الحالة *</label>
+      <select class="fs" id="mStatus">
+        <option value="Completed">✅ Completed — مكتملة</option>
+        <option value="In Progress">🔄 In Progress — جارية</option>
+        <option value="On Hold">⏸ On Hold — معلّقة</option>
+        <option value="">— غير محدد</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">التعليقات</label><textarea class="ft" id="mComments" rows="3"></textarea></div>
+    <div class="fg"><label class="fl">Due Date</label><input class="fi" id="mDue"></div>
+    <div class="m-actions">
+      <button class="btn-save" id="btnSave" onclick="saveRow()">💾 حفظ</button>
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  SUPABASE CONFIG
+// ═══════════════════════════════════════════════
+
+
+// ═══ SUPABASE SYNC ═══
+const _SB_URL = 'https://dzynmjsdpkwioableegl.supabase.co';
+const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6eW5tanNkcGt3aW9hYmxlZWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNjY4MDMsImV4cCI6MjA5MzY0MjgwM30.9tWqOB9EZ7Ysj-wdqNjJGSLtdDgk6Y1zOrjAI4lM5hI';
+const _SB_HDR = {'Content-Type':'application/json','apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY};
+
+async function syncToSupabase(row, id) {
+  try {
+    const body = {ws_group:row.wsGroup,workstream:row.workstream,scope:row.scope,acc_owner:row.accOwner,owner:row.owner,action:row.action,status:row.status,comments:row.comments,due_date:row.dueDate,updated_at:new Date().toISOString()};
+    await fetch(_SB_URL+'/rest/v1/aes_tasks?id=eq.'+id, {method:'PATCH',headers:{..._SB_HDR,'Prefer':'return=minimal'},body:JSON.stringify(body)});
+  } catch(e) { console.log('Sync error',e); }
+}
+
+async function loadFromSupabase() {
+  try {
+    const r = await fetch(_SB_URL+'/rest/v1/aes_tasks?select=*&order=id.asc',{headers:_SB_HDR});
+    if(!r.ok) return false;
+    const rows = await r.json();
+    if(!rows||rows.length===0) return false;
+    data = rows.map(r=>{return {id:r.id,wsGroup:r.ws_group||'',workstream:r.workstream||'',scope:r.scope||'',accOwner:r.acc_owner||'',owner:r.owner||'',action:r.action||'',status:r.status||'',comments:r.comments||'',dueDate:r.due_date||''}});
+    return true;
+  } catch(e) { return false; }
+}
+
+// ═══════════════ DATA (من Excel 6 مايو) ═══════════════
+let data = [{"wsGroup": "Legal Continuity Framework", "workstream": "Legal Continuity Framework", "scope": "Business continuity declaration, shareholder resolutions, transfer of business scope documentation", "accOwner": "Group Legal", "owner": "Mohammed A. Alwahbi", "action": "A formal letter will be issued stating that AIC has changed to AES while maintaining the same Commercial Registration and Unified Number The letter will be attested by the Chamber of Commerce and distributed to all customers", "status": "Completed", "comments": "", "dueDate": ""}, {"wsGroup": "Legal Continuity Framework", "workstream": "Legal Continuity Framework", "scope": "Business continuity declaration, shareholder resolutions, transfer of business scope documentation", "accOwner": "Group Legal", "owner": "", "action": "An internal letter for customer and suppliers has been prepared and is currently with Charif Khidr, Khaled and Abu Ghannam.", "status": "Completed", "comments": "Pending with Charif , Khaled and Abu Ghannam.", "dueDate": ""}, {"wsGroup": "Legal Continuity Framework", "workstream": "Legal Continuity Framework", "scope": "Business continuity declaration, shareholder resolutions, transfer of business scope documentation", "accOwner": "Group Legal", "owner": "", "action": "list of new business activities be added to the Articles of Association.", "status": "Completed", "comments": "Waiting Abdullah Almasoud  to share with Alwahbi", "dueDate": ""}, {"wsGroup": "Legal Continuity Framework", "workstream": "Legal Continuity Framework", "scope": "Business continuity declaration, shareholder resolutions, transfer of business scope documentation", "accOwner": "Group Legal", "owner": "", "action": "Obtain an official English translation of the company name from a certified office.", "status": "Completed", "comments": "TKT has been raised", "dueDate": ""}, {"wsGroup": "Legal Continuity Framework", "workstream": "Legal Continuity Framework", "scope": "Business continuity declaration, shareholder resolutions, transfer of business scope documentation", "accOwner": "Group Legal", "owner": "", "action": "To remove \"Company\" from the CR", "status": "", "comments": "", "dueDate": ""}, {"wsGroup": "Legal Continuity Framework", "workstream": "Legal Continuity Framework", "scope": "Business continuity declaration, shareholder resolutions, transfer of business scope documentation", "accOwner": "Group Legal", "owner": "", "action": "Request for Brand Registration under the new Logo", "status": "In Progress", "comments": "TKT-53189  has been raised  still under publication. The remaining duration is approximately 6 days.", "dueDate": ""}, {"wsGroup": "Legal Continuity Framework", "workstream": "Legal Continuity Framework", "scope": "Business continuity declaration, shareholder resolutions, transfer of business scope documentation", "accOwner": "Group Legal", "owner": "", "action": "Pending determination of whether Gulf Power remains the main entity under the AES, while AIC will need to issue a formal waiver.", "status": "Completed", "comments": "TKT-51140  has been raised  An invoice was sent to Finance for the publication fees related to the intellectual property transfer.", "dueDate": ""}, {"wsGroup": "Historical Financial Recognition", "workstream": "Historical Financial Recognition", "scope": "Historical audited financials, financial continuity letters, bank account", "accOwner": "Group Finance", "owner": "Bakry", "action": "The financial statements", "status": "Completed", "comments": "1- The financial statements for the previous years will be submitted under AIC. If they are rejected, we will issue an official letter confirming that we are the same company. ( Bakry)   2- Starting from 01-01-2026, new financial statements will be issued under AES (Bakry)", "dueDate": ""}, {"wsGroup": "Historical Financial Recognition", "workstream": "Historical Financial Recognition", "scope": "Historical audited financials, financial continuity letters, bank account", "accOwner": "Group Finance", "owner": "Alhana Qaed", "action": "To add AES under the facility with the new name as a third party.", "status": "In Progress", "comments": "Under process. However, any accreditation or requested certification will be provided.", "dueDate": ""}, {"wsGroup": "Historical Financial Recognition", "workstream": "Historical Financial Recognition", "scope": "Historical audited financials, financial continuity letters, bank account", "accOwner": "Group Finance", "owner": "Qaed", "action": "Send the updated signing authorities matrix to the bank to verify their requirements before sharing it with them.", "status": "In Progress", "comments": "Confirmation is pending on whether AIC or AES should be reflected on the invoice and P.O. A meeting will be scheduled to discuss and finalize this matter. Until this step is finalized, the Finance team will proceed with opening a new bank account with Saudi Investment Bank under the new entity name, while the existing SNB account will remain under the old name.", "dueDate": ""}, {"wsGroup": "Historical Financial Recognition", "workstream": "Historical Financial Recognition", "scope": "Historical audited financials, financial continuity letters, bank account", "accOwner": "Group Finance", "owner": "", "action": "Provide a bank certificate to all customers stating that the company has changed its name, along with the legal name change certificate from the Ministry of Commerce, so they can update their records.", "status": "In Progress", "comments": "", "dueDate": ""}, {"wsGroup": "New Entity Financial Setup", "workstream": "New Entity Financial Setup", "scope": "VAT, Zakat,", "accOwner": "Finance – AES", "owner": "Ahmed A. Mohamed", "action": "The VAT number has been issued, and coordination with the Zakat Authority is currently underway to obtain it.", "status": "Completed", "comments": "", "dueDate": "20-Jan"}, {"wsGroup": "New Entity Financial Setup", "workstream": "New Entity Financial Setup", "scope": "VAT, Zakat,", "accOwner": "Finance – AES", "owner": "", "action": "To Obtain management approval so the AES  be added to the VAT and Zakat group", "status": "Completed", "comments": "", "dueDate": "20-Jan"}, {"wsGroup": "New Entity Financial Setup", "workstream": "New Entity Financial Setup", "scope": "VAT, Zakat,", "accOwner": "Finance – AES", "owner": "", "action": "Awaiting approval from the Zakat Authority for AES to be included under the VAT and Zakat Group.", "status": "Completed", "comments": "", "dueDate": "25-Jan"}, {"wsGroup": "HR & Legal Compliance Requirements", "workstream": "HR & Legal Compliance Requirements", "scope": "Saudization, Gosi, Qiwa, Chamber registration", "accOwner": "HR", "owner": "Meaad", "action": "Prepare employee list will be transfrred directly to AES", "status": "Completed", "comments": "", "dueDate": "21-Jan"}, {"wsGroup": "HR & Legal Compliance Requirements", "workstream": "HR & Legal Compliance Requirements", "scope": "Saudization, Gosi, Qiwa, Chamber registration", "accOwner": "HR", "owner": "Mouath", "action": "Saudization simulation", "status": "Completed", "comments": "", "dueDate": "29-Jan"}, {"wsGroup": "HR & Legal Compliance Requirements", "workstream": "HR & Legal Compliance Requirements", "scope": "Saudization, Gosi, Qiwa, Chamber registration", "accOwner": "HR", "owner": "Mouath", "action": "Sperate company in Qiwa and Muqeem from AIC", "status": "Completed", "comments": "", "dueDate": "5-Feb"}, {"wsGroup": "HR & Legal Compliance Requirements", "workstream": "HR & Legal Compliance Requirements", "scope": "Saudization, Gosi, Qiwa, Chamber registration", "accOwner": "HR", "owner": "Mouath", "action": "Register company in Chamber of Commerce", "status": "Completed", "comments": "", "dueDate": "5-Feb"}, {"wsGroup": "HR & Legal Compliance Requirements", "workstream": "HR & Legal Compliance Requirements", "scope": "Saudization, Gosi, Qiwa, Chamber registration", "accOwner": "HR", "owner": "Mouath", "action": "Transfer employees with balances or without (EoS, vacations …etc.)", "status": "Completed", "comments": "", "dueDate": "29-Jan"}, {"wsGroup": "HR & Legal Compliance Requirements", "workstream": "HR & Legal Compliance Requirements", "scope": "Saudization, Gosi, Qiwa, Chamber registration", "accOwner": "HR", "owner": "Mouath", "action": "Consult AGC Legal on contract terminations", "status": "Completed", "comments": "AGC Legal held a consultation with Meaad, M. Wadman, M. Alsuwailem, and A. Almasoud. During the meeting, two plans were proposed: Plan A and Plan B. The team is currently working on Plan A, and we are awaiting their feedback", "dueDate": "29-Jan"}, {"wsGroup": "HR & Legal Compliance Requirements", "workstream": "HR & Legal Compliance Requirements", "scope": "Saudization, Gosi, Qiwa, Chamber registration", "accOwner": "HR", "owner": "Mouath", "action": "Transfer sponsorship (Non Saudi)", "status": "In Progress", "comments": "Transfer plan approved and sent to HRBP to start work ( start March 2026 and End Marc 2027)", "dueDate": "March 2027"}, {"wsGroup": "HR & Legal Compliance Requirements", "workstream": "HR & Legal Compliance Requirements", "scope": "Saudization, Gosi, Qiwa, Chamber registration", "accOwner": "HR", "owner": "Mouath", "action": "Transfer Saudi in GOSI and Qiwa", "status": "In Progress", "comments": "transfer plan approved and sent to HRBP to start work ( start March 2026 and End March 2027)", "dueDate": "March 2027"}, {"wsGroup": "HR & Legal Compliance Requirements", "workstream": "HR & Legal Compliance Requirements", "scope": "Saudization, Gosi, Qiwa, Chamber registration", "accOwner": "HR", "owner": "Mohammed Alrubia", "action": "Rename payroll in Oracle", "status": "In Progress", "comments": "Communication has been done with IT, and TKT-60081 has been raised and is currently under development.", "dueDate": "April 2026"}, {"wsGroup": "HR & Legal Compliance Requirements", "workstream": "HR & Legal Compliance Requirements", "scope": "Saudization, Gosi, Qiwa, Chamber registration", "accOwner": "HR", "owner": "Abdullah Almasoud", "action": "Map employees to new org chart", "status": "In Progress", "comments": "Organizational chart and employee mapping are pending feedback from Abdullah A. Almasoud and CEO approval.", "dueDate": "TBD"}, {"wsGroup": "HR & Legal Compliance Requirements", "workstream": "HR & Legal Compliance Requirements", "scope": "Saudization, Gosi, Qiwa, Chamber registration", "accOwner": "HR", "owner": "Mohammed Alrubia", "action": "Prepare updated org chart", "status": "In Progress", "comments": "", "dueDate": "2 working days after receiving employees mapping"}, {"wsGroup": "Local Content", "workstream": "Local Content", "scope": "Local Content Certificate", "accOwner": "AGC FSSC", "owner": "Ahmed K. Bakry & Hammad S. Khan", "action": "Initiate process to create Local Content Certificate for AES", "status": "In Progress", "comments": "Once we have the audited financial statement, which is the main requirement expected in April or May, the local content process can be issued.", "dueDate": "April - May"}, {"wsGroup": "Safety", "workstream": "Safety", "scope": "Local Content Certificate", "accOwner": "Safety - AIC Production", "owner": "Abdulmohsen S. Bahuwirth & Mohammed H. Hussein", "action": "To provide the safety documentation under AES framework.", "status": "Completed", "comments": "Waiting the list to be shared with the due date Reminder sent multiple times", "dueDate": ""}, {"wsGroup": "Quality control and assurance", "workstream": "Quality control and assurance", "scope": "SASO, UL, SCA, ISO and regulatory re-issuance", "accOwner": "HSQE AIC – AES", "owner": "Hussain M. Sharahili  & Chihebeddin", "action": "To provide the following certificates  1- ISO 9001  2- ISO 45001  3- ISO 31000", "status": "In Progress", "comments": "We have provided all our submission, and we are now awaiting their feedback regarding the ISO.", "dueDate": "April"}, {"wsGroup": "Customer & Government Portals", "workstream": "Customer & Government Portals", "scope": "SAP Ariba, Etimad, Aramco, SEC, NEOM and strategic customers", "accOwner": "Marketing  – AES Cpmmercial Team - Government Sales", "owner": "Tarfah / Government team", "action": "Begin AES registration process per instructions from Abdullah Almasoud", "status": "In Progress", "comments": "", "dueDate": ""}, {"wsGroup": "Brand & External Identity Alignment", "workstream": "Brand & External Identity Alignment", "scope": "Marketing", "accOwner": "Marketing  – AES Cpmmercial Team - Government Sales", "owner": "Sahar", "action": "AES logo options have been finalized and circulated to the Board for review and voting  https://forms.office.com/Pages/ResponsePage.aspx?id=e-C_EPwSTEypEiqLFhNU-YjvRqG_geZOsUayFVbNwkBUNDEzMlowMVJDOTJGR0JHS09GRzZVMU9KRC4u", "status": "Completed", "comments": "", "dueDate": ""}, {"wsGroup": "Call center", "workstream": "Call center", "scope": "Marketing", "accOwner": "Marketing  – AES Cpmmercial Team - Government Sales", "owner": "Tarfah", "action": "Configure the IVR to display Aannounce the updated company name To change the call center company name in the IVR", "status": "Completed", "comments": "Under the payment Process", "dueDate": ""}, {"wsGroup": "Marketing Email", "workstream": "Marketing Email", "scope": "Marketing", "accOwner": "Marketing  – AES Cpmmercial Team - Government Sales", "owner": "Tarfah", "action": "Set up the email AES-Marketing@alkhorayef.com for internal communication.", "status": "Completed", "comments": "AES-Marketing@alkhorayef.com", "dueDate": ""}, {"wsGroup": "ERP & Contractual Alignment", "workstream": "ERP & Contractual Alignment", "scope": "Contract novation, invoice, PO and ERP updates", "accOwner": "Finance – AES & Group Finance", "owner": "Abdullah A. Almasoud", "action": "To confirm regarding existing POs whether they should continue to be issued under the old company name or under the new company name, especially purchase orders, PRs, contracts, or any printed documents.", "status": "In Progress", "comments": "1- All new POs/invoices will be issued under the new company name.  2- GP records from last year has separted org, so there is no need to close all balances and open a new account.", "dueDate": ""}, {"wsGroup": "ERP & Contractual Alignment", "workstream": "ERP & Contractual Alignment", "scope": "Contract novation, invoice, PO and ERP updates", "accOwner": "Finance – AES & Group Finance", "owner": "Khalid", "action": "To provide all the files that require the company name to be updated, so IT can make the necessary changes.", "status": "Completed", "comments": "", "dueDate": ""}, {"wsGroup": "AGC Apps Development", "workstream": "AGC Apps Development", "scope": "Revised Documents", "accOwner": "IT", "owner": "Mahmoud S. Mohamed", "action": "To update the following documents: 1. AIA Receivables E-Invoicing Report 2. AIA Receivables E-Invoicing OM Report 3. AIA Receivables E-Invoicing PPM Report 4. ACC Customer Account Report 5. AIA Receipt Voucher Sandbox Report 6. Delivery Note 7. PS PO PDF Report.xdo 8. AIA Sales/Transfer Orders Pickslip Report 9. AIA Invoice Payment Voucher 10. AIA AP Invoice GL Voucher 11. AIA Supplier Aging Details Report (GL Date) V2 12. ACC Supplier Statement By Due Date Report 13- For the PO, a new report should be generated while retaining the existing report.", "status": "Completed", "comments": "Monday early morning will be ready", "dueDate": "9-Feb"}];
+
+// ═══════════════ STATE ═══════════════
+let tableFilter='all'; let editIdx=-1; let isAdd=false; let curFunc='all';
+
+// ═══════════════ BOOT ═══════════════
+window.onload = async () => {
+  // Load from Supabase first (live data)
+  const loaded = await loadFromSupabase();
+  if (!loaded) {
+    // fallback: localStorage
+    try {
+      const saved = localStorage.getItem('aes_updates');
+      if (saved) data = JSON.parse(saved);
+    } catch(e) {}
+  }
+  document.getElementById('loadingScreen').classList.add('hide');
+  setTimeout(() => document.getElementById('loadingScreen').style.display='none', 400);
+  render();
+  updateLastUpd();
+};
+
+function persist() {
+  // Save all rows that differ from original as updates
+  try {
+    localStorage.setItem('aes_updates', JSON.stringify(data));
+    const n = new Date();
+    const ts = n.toLocaleDateString('ar-SA') + ' ' + n.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+    localStorage.setItem('aes_ts', ts);
+    updateLastUpd();
+  } catch(e) {}
+}
+function updateLastUpd() {
+  const ts = localStorage.getItem('aes_ts');
+  document.getElementById('lastUpd').textContent = ts ? 'آخر تحديث: '+ts : 'جاهز ✓';
+  document.getElementById('syncDot').className = 'sync-dot';
+}
+
+// ═══════════════ HELPERS ═══════════════
+function sCode(s){return s==='Completed'?'C':s==='In Progress'?'I':s==='On Hold'?'H':'N';}
+function sLabel(s){return s==='Completed'?'✅ مكتملة':s==='In Progress'?'🔄 جارية':s==='On Hold'?'⏸ معلّقة':'— غير محدد';}
+function sIcon(s){return s==='Completed'?'✅':s==='In Progress'?'🔄':s==='On Hold'?'⏸':'○';}
+function getWsList(){const seen=new Set();const list=[];data.forEach(r=>{if(r.wsGroup&&!seen.has(r.wsGroup)){seen.add(r.wsGroup);list.push(r.wsGroup);}});return list;}
+function getWsRows(ws){return data.filter(r=>r.wsGroup===ws&&r.action&&r.action.trim());}
+function calcStats(){const rows=data.filter(r=>r.action&&r.action.trim());const c=rows.filter(r=>r.status==='Completed').length;const ip=rows.filter(r=>r.status==='In Progress').length;const oh=rows.filter(r=>r.status==='On Hold').length;return{total:rows.length,completed:c,inProgress:ip,onHold:oh,empty:rows.length-c-ip-oh,wsList:getWsList()};}
+
+// ═══════════════ RENDER ═══════════════
+function render(){const s=calcStats();renderKPIs(s);renderDonut(s);renderWsBars();renderWsCards();renderAccountability();renderTable();}
+
+function renderKPIs(s){
+  const pct=s.total>0?Math.round(s.completed/s.total*100):0;
+  document.getElementById('kC').textContent=s.completed;
+  document.getElementById('kCs').textContent='من '+s.total+' مهمة';
+  document.getElementById('kI').textContent=s.inProgress;
+  document.getElementById('kH').textContent=s.onHold;
+  document.getElementById('kT').textContent=s.total;
+  document.getElementById('kWs').textContent=s.wsList.length+' workstreams';
+  document.getElementById('ovPct').textContent=pct+'%';
+  document.getElementById('kP').textContent=getPeople().filter(p=>p.tasks.some(t=>t.row.status!=='Completed'&&t.row.status!=='')).length;
+  setTimeout(()=>{document.getElementById('ovFill').style.width=pct+'%';},80);
+}
+function renderDonut(s){
+  const circ=2*Math.PI*66;const t=s.total||1;
+  const cl=s.completed/t*circ;const il=s.inProgress/t*circ;const hl=s.onHold/t*circ;
+  const setArc=(id,len,off)=>{const el=document.getElementById(id);el.setAttribute('stroke-dasharray',len+' '+circ);el.setAttribute('stroke-dashoffset',-off);};
+  setTimeout(()=>{setArc('dC',cl,0);setArc('dI',il,cl);setArc('dH',hl,cl+il);},120);
+  const pct=s.total>0?Math.round(s.completed/s.total*100):0;
+  document.getElementById('dPct').textContent=pct+'%';
+  document.getElementById('lgC').textContent=s.completed;document.getElementById('lgI').textContent=s.inProgress;
+  document.getElementById('lgH').textContent=s.onHold;document.getElementById('lgN').textContent=Math.max(0,s.empty);
+}
+function renderWsBars(){
+  document.getElementById('wsBars').innerHTML=getWsList().map(ws=>{
+    const rows=getWsRows(ws);const t=rows.length;
+    const d=rows.filter(r=>r.status==='Completed').length;const ip=rows.filter(r=>r.status==='In Progress').length;const oh=rows.filter(r=>r.status==='On Hold').length;
+    const pct=t>0?Math.round(d/t*100):0;const cls=pct===100?'':ip>0?'warn':'hold';
+    return`<div class="ws-item" onclick="jumpToWs('${ws.replace(/'/g,"\\'")}')">
+      <div class="ws-hdr"><div class="ws-name">${ws}</div><div class="ws-pct">${pct}%</div></div>
+      <div class="ws-bg"><div class="ws-fill ${cls}" style="width:${pct}%"></div></div>
+      <div class="ws-counts">✅${d} &nbsp;🔄${ip} &nbsp;⏸${oh} &nbsp;📋${t}</div>
+    </div>`;
+  }).join('');
+}
+function renderWsCards(){
+  document.getElementById('wsCardsGrid').innerHTML=getWsList().map(ws=>{
+    const rows=getWsRows(ws);const t=rows.length;
+    const d=rows.filter(r=>r.status==='Completed').length;const ip=rows.filter(r=>r.status==='In Progress').length;const oh=rows.filter(r=>r.status==='On Hold').length;
+    const pct=t>0?Math.round(d/t*100):0;const hCls=pct===100?'done':oh>0&&ip===0?'hold':'prog';
+    const hRow=data.find(r=>r.wsGroup===ws&&r.accOwner);const acc=hRow?(hRow.accOwner||''):'';
+    const tasks=rows.map(r=>{
+      const idx=data.indexOf(r);
+      return`<div class="wsc-task" onclick="openEdit(${idx})">
+        <div class="wsc-task-icon">${sIcon(r.status)}</div>
+        <div class="wsc-task-body"><div class="wsc-task-action">${r.action}</div><div class="wsc-task-meta">${r.owner?'👤 '+r.owner:''} ${r.dueDate?'&nbsp;📅 '+r.dueDate:''}</div></div>
+        <span class="badge ${sCode(r.status)}" style="font-size:10px;flex-shrink:0">${r.status||'—'}</span>
+      </div>`;
+    }).join('');
+    return`<div class="ws-card">
+      <div class="wsc-hdr ${hCls}"><div><div class="wsc-name">${ws}</div>${acc?`<div style="font-size:10px;opacity:.65;margin-top:2px">🏢 ${acc}</div>`:''}</div><div class="wsc-pct">${pct}%</div></div>
+      <div class="wsc-bar-bg"><div class="wsc-bar-fill ${hCls}" style="width:${pct}%"></div></div>
+      <div class="wsc-tasks">${tasks}</div>
+      <div class="wsc-footer"><span>✅ ${d}</span><span>🔄 ${ip}</span><span>⏸ ${oh}</span><span>📋 ${t}</span></div>
+    </div>`;
+  }).join('');
+}
+function getPeople(){
+  const map={};
+  data.forEach((r,i)=>{
+    if(!r.action||!r.action.trim())return;
+    const owners=(r.owner||'').split(/[,\/&\n]+/).map(o=>o.trim()).filter(o=>o&&o.length>1);
+    owners.forEach(own=>{
+      if(!map[own]){const hRow=data.find(d=>d.wsGroup===r.wsGroup&&d.accOwner);map[own]={name:own,func:(hRow&&hRow.accOwner)||'',tasks:[]}; }
+      if(!map[own].func){const hRow=data.find(d=>d.wsGroup===r.wsGroup&&d.accOwner);if(hRow)map[own].func=hRow.accOwner||'';}
+      map[own].tasks.push({idx:i,row:r,ws:r.wsGroup});
+    });
+  });
+  return Object.values(map).sort((a,b)=>b.tasks.filter(t=>t.row.status!=='Completed').length-a.tasks.filter(t=>t.row.status!=='Completed').length);
+}
+function renderAccountability(){
+  const people=getPeople();
+  const pendRows=data.map((r,i)=>{return{r,i}}).filter(x=>x.r.action&&x.r.action.trim()&&x.r.status&&x.r.status!=='Completed');
+  document.getElementById('pendBody').innerHTML=pendRows.map(x=>{
+    const func=data.find(d=>d.wsGroup===x.r.wsGroup&&d.accOwner)?.accOwner||'';
+    return`<tr><td style="font-weight:700;color:var(--text);white-space:nowrap">${x.r.owner||'—'}</td><td style="color:var(--muted);font-size:11px;white-space:nowrap">${func}</td><td style="font-size:11px">${x.r.wsGroup}</td><td style="font-size:11px;max-width:280px">${x.r.action}</td><td><span class="badge ${sCode(x.r.status)}" onclick="openEdit(${x.i})">${sLabel(x.r.status)}</span></td><td style="font-size:11px;color:var(--blue);font-family:'IBM Plex Mono',monospace;white-space:nowrap">${x.r.dueDate||'—'}</td></tr>`;
+  }).join('');
+  const funcs=[...new Set(people.map(p=>p.func).filter(Boolean))];
+  document.getElementById('funcFilter').innerHTML=`<button class="func-btn active" onclick="filterFunc('all',this)">الكل (${people.length})</button>`+funcs.map(f=>`<button class="func-btn" onclick="filterFunc('${f.replace(/'/g,"\\'")}',this)">${f}</button>`).join('');
+  renderAccCards('all');
+}
+function filterFunc(f,btn){curFunc=f;document.querySelectorAll('.func-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderAccCards(f);}
+function renderAccCards(f){
+  const people=getPeople().filter(p=>f==='all'||p.func===f);
+  const init=n=>n.split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+  document.getElementById('accGrid').innerHTML=people.map(p=>{
+    const pend=p.tasks.filter(t=>t.row.status!=='Completed'&&t.row.status!=='');const hasP=pend.length>0;
+    const tasks=p.tasks.map(t=>`<div class="acc-task" onclick="openEdit(${t.idx})"><div class="acc-dot ${sCode(t.row.status)}"></div><div><div class="acc-txt">${t.row.action}</div><div class="acc-ws">📦 ${t.ws}</div></div></div>`).join('');
+    return`<div class="acc-card"><div class="acc-hdr"><div class="acc-avatar">${init(p.name)}</div><div style="flex:1"><div class="acc-name">${p.name}</div><div class="acc-func">${p.func||'غير محدد'}</div></div><div class="acc-badge ${hasP?'pend':''}">${hasP?'⚠️ '+pend.length+' معلّق':'✅ مكتمل'}</div></div><div class="acc-tasks">${tasks}</div><div class="acc-footer ${hasP?'pend':'clear'}">${hasP?'⚠️ '+pend.length+' مهمة تحتاج متابعة من أصل '+p.tasks.length:'✅ جميع المهام ('+p.tasks.length+') مكتملة'}</div></div>`;
+  }).join('');
+}
+function renderTable(){
+  const srch=document.getElementById('srch').value.toLowerCase();
+  const filtered=data.map((r,i)=>{return{r,i}}).filter(x=>{
+    if(!x.r.action||!x.r.action.trim())return false;
+    if(tableFilter!=='all'&&x.r.status!==tableFilter)return false;
+    if(!srch)return true;
+    return[x.r.wsGroup,x.r.scope,x.r.accOwner,x.r.owner,x.r.action,x.r.status,x.r.comments,x.r.dueDate].some(v=>v&&v.toLowerCase().includes(srch));
+  });
+  document.getElementById('tblCount').textContent='عرض '+filtered.length+' من '+data.filter(r=>r.action&&r.action.trim()).length+' مهمة';
+  let prevWs='';
+  document.getElementById('tblBody').innerHTML=filtered.map(x=>{
+    const wsD=x.r.wsGroup!==prevWs?`<span class="ws-cell">${x.r.wsGroup}</span>`:`<span style="color:var(--border)">↓</span>`;prevWs=x.r.wsGroup;
+    return`<tr><td>${wsD}</td><td style="font-size:10.5px;color:var(--muted)">${x.r.scope||''}</td><td style="font-size:10.5px">${x.r.accOwner||''}</td><td style="font-size:10.5px">${x.r.owner||''}</td><td style="font-size:11.5px">${x.r.action||''}</td><td><span class="badge ${sCode(x.r.status)}" onclick="openEdit(${x.i})">${sLabel(x.r.status)}</span></td><td style="font-size:10.5px;color:var(--muted)">${x.r.comments||''}</td><td style="font-size:10.5px;color:var(--blue);font-family:'IBM Plex Mono',monospace">${x.r.dueDate||''}</td></tr>`;
+  }).join('');
+}
+function setF(f,btn){tableFilter=f;document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderTable();}
+function openEdit(idx){
+  editIdx=idx;isAdd=false;const r=data[idx];
+  document.getElementById('mTitle').textContent='✏️ تحديث المهمة';
+  document.getElementById('mWs').value=r.wsGroup||'';document.getElementById('mScope').value=r.scope||'';
+  document.getElementById('mAcc').value=r.accOwner||'';document.getElementById('mOwner').value=r.owner||'';
+  document.getElementById('mAction').value=r.action||'';document.getElementById('mStatus').value=r.status||'';
+  document.getElementById('mComments').value=r.comments||'';document.getElementById('mDue').value=r.dueDate||'';
+  document.getElementById('overlay').classList.add('open');
+}
+function openAdd(){
+  editIdx=-1;isAdd=true;
+  document.getElementById('mTitle').textContent='➕ إضافة مهمة جديدة';
+  ['mWs','mScope','mAcc','mOwner','mAction','mComments','mDue'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mStatus').value='In Progress';
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');}
+function closeBg(e){if(e.target===document.getElementById('overlay'))closeModal();}
+function saveRow(){
+  const v={wsGroup:document.getElementById('mWs').value,workstream:document.getElementById('mWs').value,scope:document.getElementById('mScope').value,accOwner:document.getElementById('mAcc').value,owner:document.getElementById('mOwner').value,action:document.getElementById('mAction').value,status:document.getElementById('mStatus').value,comments:document.getElementById('mComments').value,dueDate:document.getElementById('mDue').value};
+  if(isAdd){data.push(v);}else{
+    const rowId = data[editIdx].id;
+    Object.assign(data[editIdx],v);
+    if(rowId) syncToSupabase(data[editIdx], rowId);
+  }
+  persist();closeModal();render();
+  showToast(isAdd?'✅ تمت الإضافة':'✅ تم الحفظ — يظهر للفريق فوراً ✓');
+}
+function showTab(id,el){
+  document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');el.classList.add('active');
+  if(id==='workstreams')renderWsCards();
+  if(id==='accountability')renderAccountability();
+  if(id==='table')renderTable();
+}
+function jumpToWs(ws){document.getElementById('srch').value=ws;showTab('table',document.querySelectorAll('.nav-tab')[3]);renderTable();}
+function exportCSV(){
+  const hdrs=['Workstream','Scope','Accountable Owner','Owner','Action Item','Status','Comments','Due Date'];
+  const rows=data.filter(r=>r.action&&r.action.trim()).map(r=>[r.wsGroup,r.scope,r.accOwner,r.owner,r.action,r.status,r.comments,r.dueDate].map(v=>`"${(v||'').replace(/"/g,'""')}"`).join(','));
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+[hdrs.join(','),...rows].join('\r\n'),],{type:'text/csv;charset=utf-8;'}));a.download='AES_Plan_'+new Date().toISOString().slice(0,10)+'.csv';a.click();showToast('📤 تم التصدير');
+}
+function showToast(msg,err=false){
+  const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(err?' err':'')+' show';
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>
