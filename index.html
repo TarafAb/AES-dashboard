@@ -336,24 +336,24 @@ tbody tr:hover td{background:var(--gx)}tbody tr:last-child td{border-bottom:none
 
 
 // ═══ SUPABASE SYNC ═══
-const _SB_URL = 'https://dzynmjsdpkwioableegl.supabase.co';
-const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR6eW5tanNkcGt3aW9hYmxlZWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNjY4MDMsImV4cCI6MjA5MzY0MjgwM30.9tWqOB9EZ7Ysj-wdqNjJGSLtdDgk6Y1zOrjAI4lM5hI';
+const _SB_URL = 'https://zlwvwugyadwxibcxeebk.supabase.co';
+const _SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsd3Z3dWd5YWR3eGliY3hlZWJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA4ODg4OTcsImV4cCI6MjA5NjQ2NDg5N30.1ANcdYWLGzvRIdZX8Dae8QjR1FUq2ZEGWmUXbbqsT9I';
 const _SB_HDR = {'Content-Type':'application/json','apikey':_SB_KEY,'Authorization':'Bearer '+_SB_KEY};
 
 async function syncToSupabase(row, id) {
   try {
-    const body = {ws_group:row.wsGroup,workstream:row.workstream,scope:row.scope,acc_owner:row.accOwner,owner:row.owner,action:row.action,status:row.status,comments:row.comments,due_date:row.dueDate,updated_at:new Date().toISOString()};
-    await fetch(_SB_URL+'/rest/v1/aes_tasks?id=eq.'+id, {method:'PATCH',headers:{..._SB_HDR,'Prefer':'return=minimal'},body:JSON.stringify(body)});
+    const body = {workstream:row.wsGroup,scope:row.scope,accountable_owner:row.accOwner,owner:row.owner,action_item:row.action,status:row.status,comments:row.comments,due_date:row.dueDate,updated_at:new Date().toISOString()};
+    await fetch(_SB_URL+'/rest/v1/action_items?id=eq.'+id, {method:'PATCH',headers:{..._SB_HDR,'Prefer':'return=minimal'},body:JSON.stringify(body)});
   } catch(e) { console.log('Sync error',e); }
 }
 
 async function loadFromSupabase() {
   try {
-    const r = await fetch(_SB_URL+'/rest/v1/aes_tasks?select=*&order=id.asc',{headers:_SB_HDR});
+    const r = await fetch(_SB_URL+'/rest/v1/action_items?select=*&order=id.asc',{headers:_SB_HDR});
     if(!r.ok) return false;
     const rows = await r.json();
     if(!rows||rows.length===0) return false;
-    data = rows.map(r=>{return {id:r.id,wsGroup:r.ws_group||'',workstream:r.workstream||'',scope:r.scope||'',accOwner:r.acc_owner||'',owner:r.owner||'',action:r.action||'',status:r.status||'',comments:r.comments||'',dueDate:r.due_date||''}});
+    data = rows.map(r=>{return {id:r.id,wsGroup:r.workstream||'',workstream:r.workstream||'',scope:r.scope||'',accOwner:r.accountable_owner||'',owner:r.owner||'',action:r.action_item||'',status:r.status||'',comments:r.comments||'',dueDate:r.due_date||''}});
     return true;
   } catch(e) { return false; }
 }
