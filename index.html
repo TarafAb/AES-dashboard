@@ -532,15 +532,23 @@ function openAdd(){
 }
 function closeModal(){document.getElementById('overlay').classList.remove('open');}
 function closeBg(e){if(e.target===document.getElementById('overlay'))closeModal();}
-function saveRow(){
+async function saveRow(){
   const v={wsGroup:document.getElementById('mWs').value,workstream:document.getElementById('mWs').value,scope:document.getElementById('mScope').value,accOwner:document.getElementById('mAcc').value,owner:document.getElementById('mOwner').value,action:document.getElementById('mAction').value,status:document.getElementById('mStatus').value,comments:document.getElementById('mComments').value,dueDate:document.getElementById('mDue').value};
-  if(isAdd){data.push(v);}else{
-    const rowId = data[editIdx].id;
+  if(isAdd){
+    try {
+      const body={workstream:v.wsGroup,scope:v.scope,accountable_owner:v.accOwner,owner:v.owner,action_item:v.action,status:v.status,comments:v.comments,due_date:v.dueDate,updated_at:new Date().toISOString()};
+      const r=await fetch(_SB_URL+'/rest/v1/action_items',{method:'POST',headers:{..._SB_HDR,'Prefer':'return=representation'},body:JSON.stringify(body)});
+      const rows=await r.json();
+      if(rows&&rows[0])v.id=rows[0].id;
+    }catch(e){console.log('Insert error',e);}
+    data.push(v);
+  }else{
+    const rowId=data[editIdx].id;
     Object.assign(data[editIdx],v);
-    if(rowId) syncToSupabase(data[editIdx], rowId);
+    if(rowId)syncToSupabase(data[editIdx],rowId);
   }
   persist();closeModal();render();
-  showToast(isAdd?'✅ تمت الإضافة':'✅ تم الحفظ — يظهر للفريق فوراً ✓');
+  showToast(isAdd?'✅ تمت الإضافة — يظهر للفريق فوراً ✓':'✅ تم الحفظ — يظهر للفريق فوراً ✓');
 }
 function showTab(id,el){
   document.querySelectorAll('.tab-view').forEach(v=>v.classList.remove('active'));
